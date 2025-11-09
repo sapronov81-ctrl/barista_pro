@@ -1,23 +1,20 @@
-name: Build Expo Android APK
+name: Android Build
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install Expo & EAS
-        run: npm install -g expo-cli eas-cli
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
@@ -27,18 +24,14 @@ jobs:
           SQLITE_INDEX="node_modules/expo-sqlite/build/index.js"
           echo "Checking $SQLITE_INDEX..."
           if grep -q "SQLiteDatabase" "$SQLITE_INDEX"; then
-           echo "⚙️ Fixing expo-sqlite import path..."
-           sed -i 's|SQLiteDatabase|SQLite|g' "$SQLITE_INDEX"
-           echo "✅ expo-sqlite import fixed."
+            echo "⚙️ Fixing expo-sqlite import path..."
+            sed -i 's|SQLiteDatabase|SQLite|g' "$SQLITE_INDEX"
+            echo "✅ expo-sqlite import fixed."
           else
-           echo "✅ expo-sqlite already correct."
+            echo "✅ expo-sqlite already correct."
           fi
 
-      - name: Apply expo-sqlite patch
-        run: npx patch-package
-
-      - name: Build APK with EAS
+      - name: Build APK
+        run: eas build --platform android --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          eas build --platform android --profile preview --non-interactive
