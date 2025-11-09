@@ -1,7 +1,7 @@
 name: Android Build (APK)
 
 on:
-  workflow_dispatch: # запуск вручную через вкладку Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,24 +11,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js (v20)
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies and EAS CLI
+      - name: Install dependencies
         run: |
           npm install --legacy-peer-deps
           npm install eas-cli --save-dev
 
-      - name: Fix expo-sqlite import (SQLiteDatabase bug)
+      - name: Fix expo-sqlite import issue
         run: |
           SQLITE_INDEX="node_modules/expo-sqlite/build/index.js"
-          echo "Checking $SQLITE_INDEX..."
+          echo "Checking for missing SQLite module in expo-sqlite..."
           if grep -q "SQLiteDatabase" "$SQLITE_INDEX"; then
-            echo "⚙️ Fixing expo-sqlite import path..."
-            sed -i 's|SQLiteDatabase|SQLite|g' "$SQLITE_INDEX"
-            echo "✅ expo-sqlite import fixed."
+            echo "⚙️ Applying expo-sqlite fix..."
+            sed -i "s|SQLiteDatabase|SQLite|g" "$SQLITE_INDEX"
+            echo "✅ Fixed import path in expo-sqlite index.js"
           else
             echo "✅ expo-sqlite already correct."
           fi
