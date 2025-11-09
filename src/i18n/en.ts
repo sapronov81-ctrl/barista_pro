@@ -1,0 +1,1 @@
+export default { tabs:{Audit:'Audit',Attestation:'Attestation',Materials:'Materials',Menu:'Menu',Trends:'Trends',Tech:'Tech',Settings:'Settings'}, start:'Start', save:'Save', export:'Export PDF', settings:'Settings', configs:'Configs', editTheory:'Edit theory questions', editAudit:'Edit audit checklists', reset:'Reset to defaults', apply:'Save', cancel:'Cancel' };

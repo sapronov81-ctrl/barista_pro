@@ -1,0 +1,1 @@
+export const colors={coffeeCherry:'#8B1E2D',greenBean:'#3A5F0B',crema:'#F3E6D0',roast:'#4B2E2B',milkFoam:'#FFF7EF',espresso:'#2A1A16',sage:'#6F8A6A',clay:'#B46A55',slate:'#4A5568',steel:'#CBD5E0'};
