@@ -33,6 +33,7 @@
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
+    "eas-cli": "^16.26.0",
     "typescript": "^5.3.3"
   }
 }
