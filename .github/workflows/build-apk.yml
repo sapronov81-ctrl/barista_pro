@@ -22,6 +22,17 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Fix expo-sqlite import
+   run: |
+    SQLITE_INDEX="node_modules/expo-sqlite/build/index.js"
+    if grep -q "SQLiteDatabase" "$SQLITE_INDEX"; then
+      echo "⚙️ Fixing expo-sqlite import path..."
+      sed -i 's|SQLiteDatabase|SQLite|g' "$SQLITE_INDEX"
+    else
+      echo "✅ expo-sqlite already fixed"
+    fi
+
+
       - name: Apply expo-sqlite patch
         run: npx patch-package
 
