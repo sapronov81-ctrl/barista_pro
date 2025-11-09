@@ -2,9 +2,9 @@ diff --git a/node_modules/expo-sqlite/build/index.js b/node_modules/expo-sqlite/
 index 1111111..2222222 100644
 --- a/node_modules/expo-sqlite/build/index.js
 +++ b/node_modules/expo-sqlite/build/index.js
-@@ -1,4 +1,4 @@
--export * from './SQLiteDatabase';
-+export * from './SQLite';
+@@ -1,6 +1,6 @@
+-export * from './SQLite';
++export * from './SQLite.js';
  export * from './SQLiteStatement';
  export * from './hooks';
  //# sourceMappingURL=index.js.map
