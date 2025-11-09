@@ -1,6 +1,9 @@
 diff --git a/node_modules/expo-sqlite/build/index.js b/node_modules/expo-sqlite/build/index.js
 --- a/node_modules/expo-sqlite/build/index.js
 +++ b/node_modules/expo-sqlite/build/index.js
-@@
+@@ -1,6 +1,6 @@
 -import * as SQLiteDatabase from './SQLiteDatabase';
 +import * as SQLiteDatabase from './SQLite';
+ import { WebSQLDatabase } from './WebSQLDatabase';
+ export { SQLiteDatabase, WebSQLDatabase };
+ export default SQLiteDatabase;
