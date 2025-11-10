@@ -48,17 +48,6 @@ jobs:
         run: |
           npm install expo-device expo-localization expo-build-properties --legacy-peer-deps
 
-      # 6️⃣ Фиксим expo-sqlite (Expo SDK 54)
-      - name: Fix expo-sqlite import path (SDK 54)
-        run: |
-          FILE=node_modules/expo-sqlite/build/index.js
-          if grep -q "require('./SQLite')" "$FILE"; then
-            echo "🔧 Patching expo-sqlite import..."
-            sed -i "s|require('./SQLite')|require('./next/SQLite')|" "$FILE"
-          else
-            echo "✅ expo-sqlite already uses /next API"
-          fi
-
       # 7️⃣ Expo prebuild (генерация android/ios)
       - name: Expo prebuild (native config)
         env:
