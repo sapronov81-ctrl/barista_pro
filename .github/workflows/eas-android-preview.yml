@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Получаем код
+      # 1️⃣ Клонируем репозиторий
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 20
 
-      # 3️⃣ Кешируем зависимости
+      # 3️⃣ Кэш npm
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
@@ -34,7 +34,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      # 4️⃣ Устанавливаем зависимости и EAS CLI
+      # 4️⃣ Установка зависимостей и EAS CLI
       - name: Install dependencies and EAS CLI
         run: |
           echo "📦 Installing deps..."
@@ -43,12 +43,23 @@ jobs:
           npx expo --version
           npx eas-cli --version
 
-      # 5️⃣ Убеждаемся, что Expo плагины реально установлены
+      # 5️⃣ Проверяем наличие необходимых Expo-плагинов
       - name: Ensure required Expo plugins installed
         run: |
-          npm install expo-device expo-localization expo-build-properties --legacy-peer-deps
+          npm install expo-localization expo-build-properties --legacy-peer-deps
 
-      # 7️⃣ Expo prebuild (генерация android/ios)
+      # 6️⃣ Устанавливаем sharp и лечим битые PNG (CRC fix)
+      - name: Fix invalid PNG CRC (adaptive icons)
+        run: |
+          echo "🧩 Fixing PNG CRC headers..."
+          npm install --no-save sharp
+          echo "import fs from 'fs'; import sharp from 'sharp';
+          const files=['assets/icon.png','assets/adaptive-icon.png','assets/splash-icon.png'];
+          for(const f of files){if(fs.existsSync(f)){const t=f+'.tmp.png';await sharp(f).png({compressionLevel:9}).toFile(t);fs.renameSync(t,f);console.log('✅ Fixed CRC:',f)}else{console.log('⚠️ Missing:',f)}}"
+          > fix-images.mjs
+          node fix-images.mjs
+
+      # 7️⃣ Expo prebuild
       - name: Expo prebuild (native config)
         env:
           CI: 1
@@ -57,7 +68,7 @@ jobs:
           npx expo config --json
           npx expo doctor
 
-      # 8️⃣ Проверяем, что expo-sqlite реально существует
+      # 8️⃣ Проверяем expo-sqlite
       - name: Verify SQLite module
         run: |
           if [ -f node_modules/expo-sqlite/build/next/SQLite.js ]; then
@@ -66,15 +77,16 @@ jobs:
             echo "❌ expo-sqlite missing!"; exit 1
           fi
 
-      # 9️⃣ Сборка Android APK (EAS Build Preview)
+      # 9️⃣ Собираем Android APK через EAS
       - name: Run EAS Android build (Preview)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_NO_VCS: 1
         run: |
+          echo "🚀 Starting EAS build..."
           npx eas-cli build --platform android --profile preview --non-interactive
 
-      # 🔟 Загружаем логи и артефакты (APK/AAB)
+      # 🔟 Загружаем артефакты
       - name: Upload build logs / artifacts
         if: always()
         uses: actions/upload-artifact@v4
