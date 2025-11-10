@@ -10,6 +10,7 @@
       "android": {
         "buildType": "apk"
       },
+      "credentialsSource": "remote",
       "env": {
         "EXPO_USE_LOCAL_CLI": "1",
         "EXPO_NO_GIT_STATUS": "1",
@@ -25,6 +26,7 @@
       "android": {
         "buildType": "app-bundle"
       },
+      "credentialsSource": "remote",
       "env": {
         "EXPO_USE_LOCAL_CLI": "1",
         "EXPO_NO_GIT_STATUS": "1"
