@@ -19,9 +19,7 @@
       "cache": {
         "disabled": true
       },
-      "environment": {
-        "node": "20"
-      }
+      "environment": "node=20"
     },
     "production": {
       "developmentClient": false,
@@ -34,9 +32,7 @@
         "EXPO_USE_LOCAL_CLI": "1",
         "EXPO_NO_GIT_STATUS": "1"
       },
-      "environment": {
-        "node": "20"
-      }
+      "environment": "node=20"
     }
   },
   "submit": {
