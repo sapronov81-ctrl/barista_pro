@@ -11,51 +11,59 @@
     "owner": "msbrst",
     "sdkVersion": "54.0.0",
     "platforms": ["ios", "android"],
+
     "plugins": [
-  "expo-localization",
-  [
-    "expo-build-properties",
-    {
-      "android": {
-        "compileSdkVersion": 34,
-        "targetSdkVersion": 34,
-        "minSdkVersion": 24,
-        "kotlinVersion": "1.9.25"
-      },
-      "ios": {
-        "deploymentTarget": "15.1"
-      }
-    }
-  ]
-],
+      "expo-localization",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 24,
+            "kotlinVersion": "1.9.25"
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
+    ],
+
     "updates": {
       "url": "https://u.expo.dev/59f0b8e8-31a0-434a-9b85-5dc92fa4aae4",
       "enabled": true,
       "fallbackToCacheTimeout": 0
     },
+
     "runtimeVersion": {
       "policy": "sdkVersion"
     },
+
     "assetBundlePatterns": ["**/*"],
+
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+
     "ios": {
-  "supportsTablet": true,
-  "bundleIdentifier": "com.msbrst.baristapro",
-  "buildNumber": "1.1.0",
-  "deploymentTarget": "15.1"
-},
-"android": {
-  "adaptiveIcon": {
-    "foregroundImage": "./assets/adaptive-icon.png",
-    "backgroundColor": "#ffffff"
-  },
-  "package": "com.msbrst.barista_pro",
-  "versionCode": 11
-},
+      "supportsTablet": true,
+      "bundleIdentifier": "com.msbrst.baristapro",
+      "buildNumber": "1.1.0",
+      "deploymentTarget": "15.1"
+    },
+
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.msbrst.baristapro",
+      "versionCode": 11
+    },
+
     "extra": {
       "eas": {
         "projectId": "59f0b8e8-31a0-434a-9b85-5dc92fa4aae4"

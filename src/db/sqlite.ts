@@ -1,5 +1,8 @@
 import { Platform } from 'react-native';
-import * as SQLite from 'expo-sqlite';
+import * as SQLite from 'expo-sqlite/next';
+
+const db = SQLite.openDatabase('barista.db');
+export { db };
 
 export type DB = SQLite.SQLiteDatabase | null;
 let _db: SQLite.SQLiteDatabase | null = null;
