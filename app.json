@@ -43,18 +43,19 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.msbrst.barista_pro",
-      "buildNumber": "1.1.0"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.msbrst.barista_pro",
-      "versionCode": 11
-    },
+  "supportsTablet": true,
+  "bundleIdentifier": "com.msbrst.baristapro",
+  "buildNumber": "1.1.0",
+  "deploymentTarget": "15.1"
+},
+"android": {
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/adaptive-icon.png",
+    "backgroundColor": "#ffffff"
+  },
+  "package": "com.msbrst.barista_pro",
+  "versionCode": 11
+},
     "extra": {
       "eas": {
         "projectId": "59f0b8e8-31a0-434a-9b85-5dc92fa4aae4"
