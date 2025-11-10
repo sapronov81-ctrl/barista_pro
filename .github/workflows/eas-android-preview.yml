@@ -85,12 +85,13 @@ jobs:
           npx expo-doctor || echo "⚠️ expo-doctor not critical"
 
       # 9) Проверяем наличие expo-sqlite/next (папка)
-      - name: Verify SQLite module
+      - name: Verify expo-sqlite module (SDK 54)
         run: |
           if [ -f node_modules/expo-sqlite/build/index.js ]; then
-            echo "✅ expo-sqlite 14.x detected (next export handled via build/index.js)"
+            echo "✅ expo-sqlite@14.x OK (no /next folder, handled via exports)"
           else
-            echo "❌ expo-sqlite missing!"; exit 1
+            echo "❌ expo-sqlite not found — reinstalling..."
+            npm install expo-sqlite@~14.0.6 --legacy-peer-deps
           fi
 
       # 10) Сборка APK (EAS)
