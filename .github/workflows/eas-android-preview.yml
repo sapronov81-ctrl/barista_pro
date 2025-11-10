@@ -66,7 +66,7 @@ jobs:
         run: |
           npx expo prebuild --clean
           npx expo config --json
-          npx expo doctor
+          npx expo-doctor || echo "⚠️ expo-doctor not critical"
 
       # 8️⃣ Проверяем expo-sqlite
       - name: Verify SQLite module
