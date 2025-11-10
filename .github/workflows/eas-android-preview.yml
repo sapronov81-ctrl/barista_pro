@@ -17,46 +17,42 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # 2️⃣ Устанавливаем Node.js
-      - name: Setup Node.js
+      # 2️⃣ Фиксируем Node.js 20.x
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      # 3️⃣ Кэшируем зависимости
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+      # 3️⃣ Проверяем Node и npm версии
+      - name: Verify Node.js and npm
+        run: |
+          echo "🧩 Node.js version:" && node -v
+          echo "🧩 npm version:" && npm -v
 
       # 4️⃣ Устанавливаем зависимости и EAS CLI
       - name: Install dependencies and EAS CLI
         run: |
           echo "📦 Installing dependencies..."
-          npm install --legacy-peer-deps
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
           npm install -g eas-cli@latest
           npx expo --version
           npx eas-cli --version
 
-      # 5️⃣ Ставим нужные Expo-плагины
+      # 5️⃣ Убеждаемся, что плагины Expo установлены
       - name: Ensure required Expo plugins installed
         run: |
           npm install expo-localization expo-build-properties --legacy-peer-deps
 
-      # 6️⃣ Ставим expo-sqlite (SDK 54)
+      # 6️⃣ Ставим expo-sqlite (совместимую с SDK 54)
       - name: Ensure expo-sqlite installed (SDK 54)
         run: |
-          echo "📦 Installing expo-sqlite@14.x ..."
+          echo "📦 Installing expo-sqlite@14.0.6 ..."
           npm install expo-sqlite@~14.0.6 --legacy-peer-deps
           npm list expo-sqlite || true
           echo "✅ expo-sqlite installed successfully"
 
-      # 7️⃣ Чиним PNG (CRC) перед prebuild
+      # 7️⃣ Чиним PNG CRC (если были повреждены)
       - name: Fix invalid PNG CRC (icons/splash)
         run: |
           npm install --no-save sharp
@@ -74,7 +70,7 @@ jobs:
           }" > fix-images.mjs
           node fix-images.mjs
 
-      # 8️⃣ Expo prebuild
+      # 8️⃣ Expo prebuild (чистый)
       - name: Expo prebuild (native config)
         env:
           CI: 1
@@ -83,11 +79,11 @@ jobs:
           npx expo config --json
           npx expo-doctor || echo "⚠️ expo-doctor not critical"
 
-      # 9️⃣ Проверка expo-sqlite
+      # 9️⃣ Проверяем, что expo-sqlite установлен
       - name: Verify expo-sqlite module (SDK 54)
         run: |
           if [ -f node_modules/expo-sqlite/build/index.js ]; then
-            echo "✅ expo-sqlite@14.x OK (handled via exports)"
+            echo "✅ expo-sqlite@14.x OK"
           else
             echo "⚠️ expo-sqlite missing — reinstalling..."
             npm install expo-sqlite@~14.0.6 --legacy-peer-deps
@@ -100,7 +96,7 @@ jobs:
           EAS_NO_VCS: 1
         run: |
           echo "🚀 Starting EAS build..."
-          npx eas-cli build --platform android --profile preview --non-interactive
+          npx eas-cli build --platform android --profile preview --non-interactive --clear-cache
 
       # 1️⃣1️⃣ Сохраняем артефакты
       - name: Upload build logs / artifacts

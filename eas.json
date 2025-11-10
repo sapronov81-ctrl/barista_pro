@@ -14,12 +14,13 @@
       "env": {
         "EXPO_USE_LOCAL_CLI": "1",
         "EXPO_NO_GIT_STATUS": "1",
-        "EXPO_BARE": "1"
+        "EXPO_BARE": "1",
+        "NPM_FLAGS": "--legacy-peer-deps"
       },
       "cache": {
         "disabled": true
       },
-      "environment": "node20"
+      "environment": "nodejs-20"
     },
     "production": {
       "developmentClient": false,
@@ -30,9 +31,10 @@
       "credentialsSource": "remote",
       "env": {
         "EXPO_USE_LOCAL_CLI": "1",
-        "EXPO_NO_GIT_STATUS": "1"
+        "EXPO_NO_GIT_STATUS": "1",
+        "NPM_FLAGS": "--legacy-peer-deps"
       },
-      "environment": "node20"
+      "environment": "nodejs-20"
     }
   },
   "submit": {
