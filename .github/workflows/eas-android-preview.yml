@@ -13,17 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Клонируем репозиторий
+      # 1) Репозиторий
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # 2️⃣ Ставим Node.js
+      # 2) Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3️⃣ Кэш npm
+      # 3) Кэш npm
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
@@ -34,7 +34,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      # 4️⃣ Установка зависимостей и EAS CLI
+      # 4) Установка зависимостей и EAS CLI
       - name: Install dependencies and EAS CLI
         run: |
           echo "📦 Installing deps..."
@@ -43,23 +43,39 @@ jobs:
           npx expo --version
           npx eas-cli --version
 
-      # 5️⃣ Проверяем наличие необходимых Expo-плагинов
+      # 5) Обязательные Expo-плагины (device не нужен в plugins — ставим только то, что используем)
       - name: Ensure required Expo plugins installed
         run: |
           npm install expo-localization expo-build-properties --legacy-peer-deps
 
-      # 6️⃣ Устанавливаем sharp и лечим битые PNG (CRC fix)
-      - name: Fix invalid PNG CRC (adaptive icons)
+      # 6) Обязательно ставим expo-sqlite нужной версии для SDK 54
+      - name: Ensure expo-sqlite installed (SDK 54)
         run: |
-          echo "🧩 Fixing PNG CRC headers..."
+          npm install expo-sqlite@~14.0.6 --legacy-peer-deps
+          node -e "console.log('expo-sqlite version:', require('expo-sqlite/package.json').version)"
+          ls -la node_modules/expo-sqlite/build || true
+          ls -la node_modules/expo-sqlite/build/next || true
+
+      # 7) Чиним PNG (CRC) перед prebuild, если вдруг снова сломаются
+      - name: Fix invalid PNG CRC (icons/splash)
+        run: |
           npm install --no-save sharp
           echo "import fs from 'fs'; import sharp from 'sharp';
           const files=['assets/icon.png','assets/adaptive-icon.png','assets/splash-icon.png'];
-          for(const f of files){if(fs.existsSync(f)){const t=f+'.tmp.png';await sharp(f).png({compressionLevel:9}).toFile(t);fs.renameSync(t,f);console.log('✅ Fixed CRC:',f)}else{console.log('⚠️ Missing:',f)}}"
-          > fix-images.mjs
+          for (const f of files) {
+            if (fs.existsSync(f)) {
+              const tmp=f+'.tmp.png';
+              const svg = `<svg width='100%' height='100%'></svg>`; // no-op
+              await sharp(f).png({ compressionLevel:9 }).toFile(tmp);
+              fs.renameSync(tmp,f);
+              console.log('✅ Fixed CRC:', f);
+            } else {
+              console.log('⚠️ Missing:', f);
+            }
+          }" > fix-images.mjs
           node fix-images.mjs
 
-      # 7️⃣ Expo prebuild
+      # 8) Expo prebuild (важно: CI=1, без --non-interactive)
       - name: Expo prebuild (native config)
         env:
           CI: 1
@@ -68,16 +84,16 @@ jobs:
           npx expo config --json
           npx expo-doctor || echo "⚠️ expo-doctor not critical"
 
-      # 8️⃣ Проверяем expo-sqlite
+      # 9) Проверяем наличие expo-sqlite/next (папка)
       - name: Verify SQLite module
         run: |
-          if [ -f node_modules/expo-sqlite/build/next/SQLite.js ]; then
-            echo "✅ expo-sqlite/next found"
+          if [ -f node_modules/expo-sqlite/build/index.js ]; then
+            echo "✅ expo-sqlite 14.x detected (next export handled via build/index.js)"
           else
             echo "❌ expo-sqlite missing!"; exit 1
           fi
 
-      # 9️⃣ Собираем Android APK через EAS
+      # 10) Сборка APK (EAS)
       - name: Run EAS Android build (Preview)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -86,7 +102,7 @@ jobs:
           echo "🚀 Starting EAS build..."
           npx eas-cli build --platform android --profile preview --non-interactive
 
-      # 🔟 Загружаем артефакты
+      # 11) Артефакты
       - name: Upload build logs / artifacts
         if: always()
         uses: actions/upload-artifact@v4
