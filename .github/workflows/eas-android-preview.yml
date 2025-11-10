@@ -1,0 +1,80 @@
+name: EAS Android Preview Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - dev
+      - preview
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies and EAS CLI
+        run: |
+          npm ci
+          npm install -g eas-cli@latest
+          npx expo --version
+          npx eas-cli --version
+
+      - name: Fix expo-sqlite import path (SDK 54)
+        run: |
+          FILE=node_modules/expo-sqlite/build/index.js
+          if grep -q "require('./SQLite')" "$FILE"; then
+            echo "🔧 Patching expo-sqlite import..."
+            sed -i "s|require('./SQLite')|require('./next/SQLite')|" "$FILE"
+          else
+            echo "✅ expo-sqlite already uses /next API"
+          fi
+
+      - name: Expo prebuild (native config)
+        run: |
+          npx expo prebuild --clean --non-interactive
+          npx expo config --json
+          npx expo doctor
+
+      - name: Verify SQLite module
+        run: |
+          if [ -f node_modules/expo-sqlite/build/next/SQLite.js ]; then
+            echo "✅ expo-sqlite/next found"
+          else
+            echo "❌ expo-sqlite missing!"; exit 1
+          fi
+
+      - name: Run EAS Android build (Preview)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_NO_VCS: 1
+        run: |
+          npx eas-cli build --platform android --profile preview --non-interactive
+
+      - name: Upload build logs / artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eas-android-preview-output
+          path: |
+            **/eas.log
+            .expo/
+            build/

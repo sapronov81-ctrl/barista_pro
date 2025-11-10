@@ -1,20 +1,20 @@
 {
   "cli": {
-    "version": ">= 11.0.0"
+    "version": ">= 13.2.0"
   },
   "build": {
     "preview": {
+      "developmentClient": false,
+      "distribution": "internal",
       "android": {
         "buildType": "apk"
-      }
-    },
-    "production": {
-      "android": {
-        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_USE_LOCAL_CLI": "1",
+        "EXPO_NO_GIT_STATUS": "1",
+        "EXPO_BARE": "1"
       }
     }
-  },
-  "submit": {
-    "production": {}
   }
 }
+
