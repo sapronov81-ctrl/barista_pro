@@ -13,17 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Репозиторий
+      # 1️⃣ Получаем репозиторий
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # 2) Node.js
+      # 2️⃣ Устанавливаем Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3) Кэш npm
+      # 3️⃣ Кэшируем зависимости
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
@@ -34,29 +34,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      # 4) Установка зависимостей и EAS CLI
+      # 4️⃣ Устанавливаем зависимости и EAS CLI
       - name: Install dependencies and EAS CLI
         run: |
-          echo "📦 Installing deps..."
+          echo "📦 Installing dependencies..."
           npm install --legacy-peer-deps
           npm install -g eas-cli@latest
           npx expo --version
           npx eas-cli --version
 
-      # 5) Обязательные Expo-плагины (device не нужен в plugins — ставим только то, что используем)
+      # 5️⃣ Ставим нужные Expo-плагины
       - name: Ensure required Expo plugins installed
         run: |
           npm install expo-localization expo-build-properties --legacy-peer-deps
 
-      # 6) Обязательно ставим expo-sqlite нужной версии для SDK 54
+      # 6️⃣ Ставим expo-sqlite (SDK 54)
       - name: Ensure expo-sqlite installed (SDK 54)
         run: |
+          echo "📦 Installing expo-sqlite@14.x ..."
           npm install expo-sqlite@~14.0.6 --legacy-peer-deps
-          node -e "console.log('expo-sqlite version:', require('expo-sqlite/package.json').version)"
-          ls -la node_modules/expo-sqlite/build || true
-          ls -la node_modules/expo-sqlite/build/next || true
+          npm list expo-sqlite || true
+          echo "✅ expo-sqlite installed successfully"
 
-      # 7) Чиним PNG (CRC) перед prebuild, если вдруг снова сломаются
+      # 7️⃣ Чиним PNG (CRC) перед prebuild
       - name: Fix invalid PNG CRC (icons/splash)
         run: |
           npm install --no-save sharp
@@ -65,7 +65,6 @@ jobs:
           for (const f of files) {
             if (fs.existsSync(f)) {
               const tmp=f+'.tmp.png';
-              const svg = `<svg width='100%' height='100%'></svg>`; // no-op
               await sharp(f).png({ compressionLevel:9 }).toFile(tmp);
               fs.renameSync(tmp,f);
               console.log('✅ Fixed CRC:', f);
@@ -75,7 +74,7 @@ jobs:
           }" > fix-images.mjs
           node fix-images.mjs
 
-      # 8) Expo prebuild (важно: CI=1, без --non-interactive)
+      # 8️⃣ Expo prebuild
       - name: Expo prebuild (native config)
         env:
           CI: 1
@@ -84,17 +83,17 @@ jobs:
           npx expo config --json
           npx expo-doctor || echo "⚠️ expo-doctor not critical"
 
-      # 9) Проверяем наличие expo-sqlite/next (папка)
+      # 9️⃣ Проверка expo-sqlite
       - name: Verify expo-sqlite module (SDK 54)
         run: |
           if [ -f node_modules/expo-sqlite/build/index.js ]; then
-            echo "✅ expo-sqlite@14.x OK (no /next folder, handled via exports)"
+            echo "✅ expo-sqlite@14.x OK (handled via exports)"
           else
-            echo "❌ expo-sqlite not found — reinstalling..."
+            echo "⚠️ expo-sqlite missing — reinstalling..."
             npm install expo-sqlite@~14.0.6 --legacy-peer-deps
           fi
 
-      # 10) Сборка APK (EAS)
+      # 🔟 Сборка APK через EAS
       - name: Run EAS Android build (Preview)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -103,7 +102,7 @@ jobs:
           echo "🚀 Starting EAS build..."
           npx eas-cli build --platform android --profile preview --non-interactive
 
-      # 11) Артефакты
+      # 1️⃣1️⃣ Сохраняем артефакты
       - name: Upload build logs / artifacts
         if: always()
         uses: actions/upload-artifact@v4
