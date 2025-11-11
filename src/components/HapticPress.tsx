@@ -1,1 +1,0 @@
-import React from 'react';import { Pressable, PressableProps } from 'react-native';import * as Haptics from 'expo-haptics';export default function HapticPress(props:PressableProps){return <Pressable onPress={async(e)=>{try{await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);}catch{} props.onPress?.(e as any);} } {...props}/>;}
