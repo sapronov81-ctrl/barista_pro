@@ -55,7 +55,7 @@ jobs:
             echo "✅ Generated assets/icon.png"
           fi
           if [ ! -s assets/adaptive-icon.png ]; then
-            convert -size 512x512 xc:"#C9A574" -gravity center -pointsize 180 -fill white -annotate 0 "BAR" assets/adaptive-icon.png
+            convert -size 512x512 xc:"#C9A574" -gravity center -pointsize 180 -fill white -annotate 0 "BAR" assets/adaptive-icon.png"
             echo "✅ Generated assets/adaptive-icon.png"
           fi
 
@@ -64,6 +64,18 @@ jobs:
         env:
           CI: 1
         run: npx expo prebuild --platform android
+
+      # 🧩 Создаём index.js если его нет (нужно для RN bundle)
+      - name: Ensure index.js exists
+        run: |
+          if [ ! -f index.js ]; then
+            echo "import { registerRootComponent } from 'expo';" > index.js
+            echo "import App from './App';" >> index.js
+            echo "registerRootComponent(App);" >> index.js
+            echo "✅ Created missing index.js"
+          else
+            echo "✅ index.js already exists"
+          fi
 
       # 🩹 ФИКС: убираем file("") из app/build.gradle (основная причина краша)
       - name: Patch build.gradle entryFile
