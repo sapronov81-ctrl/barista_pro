@@ -1,7 +1,7 @@
 name: Android Build (GitHub-only: prebuild + Gradle)
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
   push:
     tags:
       - "v*.*.*"
@@ -56,7 +56,16 @@ jobs:
         run: |
           FILE=android/app/build.gradle
           if ! grep -q "signingConfigs" "$FILE"; then
-            awk '1;/android \{/{print "    signingConfigs {\n        release {\n            storeFile file(System.getenv(\"MYAPP_UPLOAD_STORE_FILE\") ?: project.property(\"MYAPP_UPLOAD_STORE_FILE\"))\n            storePassword System.getenv(\"MYAPP_UPLOAD_STORE_PASSWORD\") ?: project.property(\"MYAPP_UPLOAD_STORE_PASSWORD\")\n            keyAlias System.getenv(\"MYAPP_UPLOAD_KEY_ALIAS\") ?: project.property(\"MYAPP_UPLOAD_KEY_ALIAS\")\n            keyPassword System.getenv(\"MYAPP_UPLOAD_KEY_PASSWORD\") ?: project.property(\"MYAPP_UPLOAD_KEY_PASSWORD\")\n        }\n    }"}' "$FILE" > tmp && mv tmp "$FILE"
+            echo '    signingConfigs {' >> tmpfile
+            echo '        release {' >> tmpfile
+            echo '            storeFile file(System.getenv("MYAPP_UPLOAD_STORE_FILE") ?: project.property("MYAPP_UPLOAD_STORE_FILE"))' >> tmpfile
+            echo '            storePassword System.getenv("MYAPP_UPLOAD_STORE_PASSWORD") ?: project.property("MYAPP_UPLOAD_STORE_PASSWORD")' >> tmpfile
+            echo '            keyAlias System.getenv("MYAPP_UPLOAD_KEY_ALIAS") ?: project.property("MYAPP_UPLOAD_KEY_ALIAS")' >> tmpfile
+            echo '            keyPassword System.getenv("MYAPP_UPLOAD_KEY_PASSWORD") ?: project.property("MYAPP_UPLOAD_KEY_PASSWORD")' >> tmpfile
+            echo '        }' >> tmpfile
+            echo '    }' >> tmpfile
+            cat "$FILE" >> tmpfile2
+            mv tmpfile2 "$FILE"
           fi
           if ! grep -q "signingConfig signingConfigs.release" "$FILE"; then
             sed -i '/buildTypes {/,/}/s/release {/&\n            signingConfig signingConfigs.release/' "$FILE"
