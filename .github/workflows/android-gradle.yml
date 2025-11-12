@@ -12,6 +12,7 @@ jobs:
     timeout-minutes: 60
     env:
       JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
+      CI: 1
 
     steps:
       - name: Checkout
@@ -36,8 +37,24 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      # 🔧 Новый шаг: автогенерация иконок для CI
+      - name: Ensure app icons exist
+        run: |
+          mkdir -p assets
+          sudo apt-get update && sudo apt-get install -y imagemagick
+          if [ ! -s assets/icon.png ]; then
+            convert -size 512x512 xc:"#C9A574" -gravity center -pointsize 180 -fill white -annotate 0 "BAR" assets/icon.png
+            echo "✅ Generated assets/icon.png"
+          fi
+          if [ ! -s assets/adaptive-icon.png ]; then
+            convert -size 512x512 xc:"#C9A574" -gravity center -pointsize 180 -fill white -annotate 0 "BAR" assets/adaptive-icon.png
+            echo "✅ Generated assets/adaptive-icon.png"
+          fi
+
       - name: Prebuild (generate android/)
-        run: npx expo prebuild --non-interactive --platform android
+        env:
+          CI: 1
+        run: npx expo prebuild --platform android
 
       - name: Decode keystore
         env:
@@ -56,16 +73,16 @@ jobs:
         run: |
           FILE=android/app/build.gradle
           if ! grep -q "signingConfigs" "$FILE"; then
-            echo '    signingConfigs {' >> tmpfile
-            echo '        release {' >> tmpfile
-            echo '            storeFile file(System.getenv("MYAPP_UPLOAD_STORE_FILE") ?: project.property("MYAPP_UPLOAD_STORE_FILE"))' >> tmpfile
-            echo '            storePassword System.getenv("MYAPP_UPLOAD_STORE_PASSWORD") ?: project.property("MYAPP_UPLOAD_STORE_PASSWORD")' >> tmpfile
-            echo '            keyAlias System.getenv("MYAPP_UPLOAD_KEY_ALIAS") ?: project.property("MYAPP_UPLOAD_KEY_ALIAS")' >> tmpfile
-            echo '            keyPassword System.getenv("MYAPP_UPLOAD_KEY_PASSWORD") ?: project.property("MYAPP_UPLOAD_KEY_PASSWORD")' >> tmpfile
-            echo '        }' >> tmpfile
-            echo '    }' >> tmpfile
-            cat "$FILE" >> tmpfile2
-            mv tmpfile2 "$FILE"
+            echo 'android {' > tmp && cat "$FILE" >> tmp && mv tmp "$FILE"
+            echo '    signingConfigs {' >> "$FILE"
+            echo '        release {' >> "$FILE"
+            echo '            storeFile file(System.getenv("MYAPP_UPLOAD_STORE_FILE") ?: project.property("MYAPP_UPLOAD_STORE_FILE"))' >> "$FILE"
+            echo '            storePassword System.getenv("MYAPP_UPLOAD_STORE_PASSWORD") ?: project.property("MYAPP_UPLOAD_STORE_PASSWORD")' >> "$FILE"
+            echo '            keyAlias System.getenv("MYAPP_UPLOAD_KEY_ALIAS") ?: project.property("MYAPP_UPLOAD_KEY_ALIAS")' >> "$FILE"
+            echo '            keyPassword System.getenv("MYAPP_UPLOAD_KEY_PASSWORD") ?: project.property("MYAPP_UPLOAD_KEY_PASSWORD")' >> "$FILE"
+            echo '        }' >> "$FILE"
+            echo '    }' >> "$FILE"
+            echo '}' >> "$FILE"
           fi
           if ! grep -q "signingConfig signingConfigs.release" "$FILE"; then
             sed -i '/buildTypes {/,/}/s/release {/&\n            signingConfig signingConfigs.release/' "$FILE"
