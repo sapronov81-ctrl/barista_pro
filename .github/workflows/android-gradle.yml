@@ -55,7 +55,7 @@ jobs:
             echo "✅ Generated assets/icon.png"
           fi
           if [ ! -s assets/adaptive-icon.png ]; then
-            convert -size 512x512 xc:"#C9A574" -gravity center -pointsize 180 -fill white -annotate 0 "BAR" assets/adaptive-icon.png"
+            convert -size 512x512 xc:"#C9A574" -gravity center -pointsize 180 -fill white -annotate 0 "BAR" assets/adaptive-icon.png
             echo "✅ Generated assets/adaptive-icon.png"
           fi
 
