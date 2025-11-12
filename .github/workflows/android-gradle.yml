@@ -15,9 +15,11 @@ jobs:
       CI: 1
 
     steps:
+      # 📦 1. Получаем код
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ⚙️ 2. Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -27,6 +29,7 @@ jobs:
       - name: Install deps
         run: npm ci || npm i
 
+      # ☕️ 3. Java 17
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -34,14 +37,15 @@ jobs:
           java-version: 17
           cache: gradle
 
+      # 🤖 4. Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # ✅ Исправление: автоматическое принятие лицензий (фикс зависаний)
+      # ✅ Автопринятие лицензий
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses || true
 
-      # 🔧 Автогенерация иконок для CI, если нет своих
+      # 🖼️ Генерация иконок, если их нет
       - name: Ensure app icons exist
         run: |
           mkdir -p assets
@@ -61,6 +65,21 @@ jobs:
           CI: 1
         run: npx expo prebuild --platform android
 
+      # 🩹 ФИКС: убираем file("") из app/build.gradle (основная причина краша)
+      - name: Patch build.gradle entryFile
+        run: |
+          FILE=android/app/build.gradle
+          echo "🔧 Checking for 'entryFile = file(''...)' issues in $FILE"
+          # Удаляем строку, которую expo добавляет с пустым file('')
+          sed -i "/entryFile\s*=\s*file(/d" "$FILE"
+          # Добавляем безопасную конфигурацию entryFile
+          echo "" >> "$FILE"
+          echo "// --- CI patch: force entryFile to avoid file('') crash" >> "$FILE"
+          echo "project.ext.set(\"react\", [" >> "$FILE"
+          echo "  entryFile: \"${GITHUB_WORKSPACE}/index.js\"" >> "$FILE"
+          echo "])" >> "$FILE"
+          echo "✅ build.gradle patched successfully."
+
       # 🔐 Декодирование keystore из base64
       - name: Decode keystore
         env:
@@ -77,7 +96,7 @@ jobs:
           echo "MYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/gradle.properties
           echo "MYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}" >> android/gradle.properties
 
-      # 🧱 Проверка наличия ключа перед сборкой
+      # 🧱 Проверка наличия keystore
       - name: Verify keystore exists
         run: |
           if [ ! -f android/app/my-release-key.jks ]; then
@@ -87,7 +106,7 @@ jobs:
             echo "✅ Keystore file verified."
           fi
 
-      # 🏗️ Сборка релиза
+      # 🏗️ Сборка (AAB + APK)
       - name: Build Release (AAB + APK)
         working-directory: android
         run: |
