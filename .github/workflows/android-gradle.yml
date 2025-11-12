@@ -37,6 +37,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      # ✅ Исправление: автоматическое принятие лицензий (фикс зависаний)
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
       # 🔧 Новый шаг: автогенерация иконок для CI
       - name: Ensure app icons exist
         run: |

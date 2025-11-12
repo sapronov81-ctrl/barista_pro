@@ -9,7 +9,8 @@
     "prebuild:android": "expo prebuild --non-interactive --platform android",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "db:init": "ts-node --transpile-only src/db/init.ts"
+    "db:init": "ts-node --transpile-only src/db/init.ts",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "expo": "~51.0.0",
