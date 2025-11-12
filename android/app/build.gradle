@@ -2,21 +2,19 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
-def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
-
-// 🔒 FAILSAFE: перехватываем любые пустые вызовы file("") даже внутри плагинов,
-// чтобы избежать "path may not be null or empty string"
-metaClass.file = { path ->
-    if (!path || path.toString().trim().isEmpty()) {
-        def dummyPath = new File("${rootDir}/_dummy_entry.js")
-        if (!dummyPath.exists()) {
-            dummyPath.text = "// dummy entry file for CI"
-        }
-        println "[FAILSAFE] Empty file() call intercepted → ${dummyPath}"
-        return dummyPath
+// 🛠 Фикс для CI: безопасная версия file()
+def safeFile(path) {
+    if (path == null || path.trim().isEmpty()) {
+        println "[WARN] ⚠️ Attempted file('') — returning project root as fallback."
+        return rootDir
     }
-    return new File(path.toString())
+    return file(path)
 }
+
+// Применяем безопасный file() в глобальном пространстве
+ext.file = { path -> safeFile(path) }
+
+def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 static def versionToNumber(major, minor, patch) {
   return patch * 100 + minor * 10000 + major * 1000000
@@ -30,18 +28,13 @@ def getRNVersion() {
 
   def coreVersion = version.split("-")[0]
   def (major, minor, patch) = coreVersion.tokenize('.').collect { it.toInteger() }
-
   return versionToNumber(major, minor, patch)
 }
 def rnVersion = getRNVersion()
 
-/**
- * React Native configuration block (без file() вызовов)
- */
 react {
-    // Только базовые параметры — без file()
+    // Не вызываем file() внутри — только строка
     bundleCommand = "export:embed"
-
     if (rnVersion >= versionToNumber(0, 75, 0)) {
         autolinkLibrariesWithApp()
     }
