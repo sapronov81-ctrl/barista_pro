@@ -2,17 +2,14 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
-// 🧩 Глобальный фикс file('') для CI (Expo / RN 0.75)
-def safeFile(path) {
+// 🧱 Глобальный safe file() для CI, Expo, RN 0.75+
+ext.file = { path ->
     if (path == null || path.toString().trim().isEmpty()) {
-        println "[WARN] ⚠️ Attempted file('') — returning rootDir as fallback"
+        println "[WARN] ⚙️ file('') called — returning rootDir"
         return rootDir
     }
     return new File(path)
 }
-
-// Переопределяем file() глобально
-ext.file = { path -> safeFile(path) }
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
@@ -34,14 +31,14 @@ def getRNVersion() {
 def rnVersion = getRNVersion()
 
 react {
-    // Без file() — безопасно
+    // Безопасная конфигурация
     bundleCommand = "export:embed"
     if (rnVersion >= versionToNumber(0, 75, 0)) {
         autolinkLibrariesWithApp()
     }
 }
 
-// ⚙️ Безопасно вычисляем entryFile (если Expo не нашёл)
+// ⚙️ Безопасное вычисление entryFile
 def resolvedEntryPath = ""
 try {
     resolvedEntryPath = ["node", "-e", "require('expo/scripts/resolveAppEntry')", projectRoot, "android", "absolute"]
@@ -58,7 +55,6 @@ if (!resolvedEntryPath || resolvedEntryPath.isEmpty()) {
 }
 println "[INFO] Using entry file: $resolvedEntryPath"
 
-// Присваиваем для React Native Gradle Plugin
 project.ext.set("react", [
     entryFile: resolvedEntryPath
 ])
