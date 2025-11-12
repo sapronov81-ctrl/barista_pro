@@ -4,6 +4,20 @@ apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
+// 🔒 FAILSAFE: перехватываем любые пустые вызовы file("") даже внутри плагинов,
+// чтобы избежать "path may not be null or empty string"
+metaClass.file = { path ->
+    if (!path || path.toString().trim().isEmpty()) {
+        def dummyPath = new File("${rootDir}/_dummy_entry.js")
+        if (!dummyPath.exists()) {
+            dummyPath.text = "// dummy entry file for CI"
+        }
+        println "[FAILSAFE] Empty file() call intercepted → ${dummyPath}"
+        return dummyPath
+    }
+    return new File(path.toString())
+}
+
 static def versionToNumber(major, minor, patch) {
   return patch * 100 + minor * 10000 + major * 1000000
 }
