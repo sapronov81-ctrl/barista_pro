@@ -41,7 +41,7 @@ jobs:
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses || true
 
-      # 🔧 Новый шаг: автогенерация иконок для CI
+      # 🔧 Автогенерация иконок для CI, если нет своих
       - name: Ensure app icons exist
         run: |
           mkdir -p assets
@@ -55,17 +55,21 @@ jobs:
             echo "✅ Generated assets/adaptive-icon.png"
           fi
 
+      # ⚙️ Expo Prebuild
       - name: Prebuild (generate android/)
         env:
           CI: 1
         run: npx expo prebuild --platform android
 
+      # 🔐 Декодирование keystore из base64
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/my-release-key.jks
+          echo "✅ Keystore decoded"
 
+      # 🧩 Настройка signing-конфига для Gradle
       - name: Configure signing (gradle.properties)
         run: |
           echo "MYAPP_UPLOAD_STORE_FILE=$PWD/android/app/my-release-key.jks" >> android/gradle.properties
@@ -73,31 +77,25 @@ jobs:
           echo "MYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/gradle.properties
           echo "MYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}" >> android/gradle.properties
 
-      - name: Inject signing config
+      # 🧱 Проверка наличия ключа перед сборкой
+      - name: Verify keystore exists
         run: |
-          FILE=android/app/build.gradle
-          if ! grep -q "signingConfigs" "$FILE"; then
-            echo 'android {' > tmp && cat "$FILE" >> tmp && mv tmp "$FILE"
-            echo '    signingConfigs {' >> "$FILE"
-            echo '        release {' >> "$FILE"
-            echo '            storeFile file(System.getenv("MYAPP_UPLOAD_STORE_FILE") ?: project.property("MYAPP_UPLOAD_STORE_FILE"))' >> "$FILE"
-            echo '            storePassword System.getenv("MYAPP_UPLOAD_STORE_PASSWORD") ?: project.property("MYAPP_UPLOAD_STORE_PASSWORD")' >> "$FILE"
-            echo '            keyAlias System.getenv("MYAPP_UPLOAD_KEY_ALIAS") ?: project.property("MYAPP_UPLOAD_KEY_ALIAS")' >> "$FILE"
-            echo '            keyPassword System.getenv("MYAPP_UPLOAD_KEY_PASSWORD") ?: project.property("MYAPP_UPLOAD_KEY_PASSWORD")' >> "$FILE"
-            echo '        }' >> "$FILE"
-            echo '    }' >> "$FILE"
-            echo '}' >> "$FILE"
-          fi
-          if ! grep -q "signingConfig signingConfigs.release" "$FILE"; then
-            sed -i '/buildTypes {/,/}/s/release {/&\n            signingConfig signingConfigs.release/' "$FILE"
+          if [ ! -f android/app/my-release-key.jks ]; then
+            echo "❌ Keystore file missing!"
+            exit 1
+          else
+            echo "✅ Keystore file verified."
           fi
 
+      # 🏗️ Сборка релиза
       - name: Build Release (AAB + APK)
         working-directory: android
         run: |
+          ./gradlew clean
           ./gradlew bundleRelease --no-daemon --stacktrace
           ./gradlew assembleRelease --no-daemon --stacktrace
 
+      # 📦 Загрузка артефактов
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
